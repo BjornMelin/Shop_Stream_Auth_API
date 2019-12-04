@@ -3,9 +3,9 @@ const express = require('express');
 var cors = require('cors');
 const bodyParser = require('body-parser');
 const logger = require('morgan');
-const { User1 } = require('./user');
+const { User } = require('./Schemas/user');
 // const { Customer } = require('./customer');
-var jwt = require('jsonwebtoken');
+// var jwt = require('jsonwebtoken');
 
 const API_PORT = 9000;
 const app = express();
@@ -16,8 +16,12 @@ const router = express.Router();
 const dbRoute = 'mongodb://127.0.0.1:27017/UserAuth';
 
 // connects our back end code with the database
-mongoose.connect(dbRoute, { useNewUrlParser: true, useUnifiedTopology: true });
-
+mongoose.connect(dbRoute, { 
+  useNewUrlParser: true, 
+  useUnifiedTopology: true, 
+  useCreateIndex: true, 
+  useFindAndModify: false 
+});
 let db = mongoose.connection;
 
 db.once('open', () => console.log('connected to the database'));
@@ -31,44 +35,48 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(logger('dev'));
 
-// this is our get method
-// this method fetches all available data in our database
-router.get('/getData', (req, res) => {
-  Data.find((err, data) => {
-    if (err) return res.json({ success: false, error: err });
-    return res.json({ success: true, data: data });
-  });
-});
-
-// this is our update method
-// this method overwrites existing data in our database
-router.post('/updateData', (req, res) => {
-  const { id, update } = req.body;
-  Data.findByIdAndUpdate(id, update, (err) => {
-    if (err) return res.json({ success: false, error: err });
-    return res.json({ success: true });
-  });
-});
-
-// this is our delete method
-// this method removes existing data in our database
-router.delete('/deleteData', (req, res) => {
-  const { id } = req.body;
-  Data.findByIdAndRemove(id, (err) => {
-    if (err) return res.send(err);
-    return res.json({ success: true });
-  });
-});
 
 
 
-router.post('/putData', async (req, res) => {
+// // this is our get method
+// // this method fetches all available data in our database
+// router.get('/getData', (req, res) => {
+//   Data.find((err, data) => {
+//     if (err) return res.json({ success: false, error: err });
+//     return res.json({ success: true, data: data });
+//   });
+// });
+
+
+// // this is our update method
+// // this method overwrites existing data in our database
+// router.post('/updateData', (req, res) => {
+//   const { id, update } = req.body;
+//   Data.findByIdAndUpdate(id, update, (err) => {
+//     if (err) return res.json({ success: false, error: err });
+//     return res.json({ success: true });
+//   });
+// });
+
+// // this is our delete method
+// // this method removes existing data in our database
+// router.delete('/deleteData', (req, res) => {
+//   const { id } = req.body;
+//   Data.findByIdAndRemove(id, (err) => {
+//     if (err) return res.send(err);
+//     return res.json({ success: true });
+//   });
+// });
+
+
+
+router.post('/postUser', async (req, res) => {
   // console.log(req);
   // console.log(req.body);
   const {
     username, password, permission, firstName, lastName, email
   } = req.body;
-  let newUser = new User1({
+  let newUser = new User({
     username,
     password,
     permission,
@@ -81,27 +89,38 @@ router.post('/putData', async (req, res) => {
 });
 
 
-// this method will send a authentication token back to the client if
-// the user and password are correct.
-router.get('/authenticate', (req, res) => {
-  User.find({ 
-    email: req.query.email,
-    password: req.query.password
-   }, (err, user) => {
-    if (err || user.length <= 0) return res.json({ 
-      success: false,
-      error: err 
-    });
-    console.log('hit');
-    var token = jwt.sign(
-      { email: user.email }, 
-      'thisIsAInventoryManagementSystem123', 
-      { expiresIn: 120}
-    );
-
-    res.send(token);
-  });
+router.get('/getUsers', async (req, res) => {
+  console.log(req.body);
+  const users = await User.find({}); // finds all in the db
+  console.log(users);
+  res.send(users);
 });
+
+
+
+
+
+// // this method will send a authentication token back to the client if
+// // the user and password are correct.
+// router.get('/authenticate', (req, res) => {
+//   User.find({ 
+//     email: req.query.email,
+//     password: req.query.password
+//    }, (err, user) => {
+//     if (err || user.length <= 0) return res.json({ 
+//       success: false,
+//       error: err 
+//     });
+//     console.log('hit');
+//     var token = jwt.sign(
+//       { email: user.email }, 
+//       'thisIsAInventoryManagementSystem123', 
+//       { expiresIn: 120}
+//     );
+
+//     res.send(token);
+//   });
+// });
 
 
 // router.get('/getUserData', async (req, res) => {
