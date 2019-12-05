@@ -4,8 +4,7 @@ var cors = require('cors');
 const bodyParser = require('body-parser');
 const logger = require('morgan');
 const { User } = require('./Schemas/user');
-// const { Customer } = require('./customer');
-// var jwt = require('jsonwebtoken');
+var jwt = require('jsonwebtoken');
 
 const API_PORT = 9000;
 const app = express();
@@ -89,14 +88,48 @@ router.post('/postUser', async (req, res) => {
 });
 
 
+// router.get('/getUsers', async (req, res) => {
+//   console.log(req.body);
+//   const users = await User.find({}); // finds all in the db
+//   console.log(users);
+//   res.send(users);
+// });
+
+
+// this is our get method
+// this method fetches all available data in our database
 router.get('/getUsers', async (req, res) => {
-  console.log(req.body);
-  const users = await User.find({}); // finds all in the db
-  console.log(users);
-  res.send(users);
+  var peopleJSON = await User.find({});
+  if (peopleJSON === null) return res.json({ 
+    success: false, 
+    user: user.length,
+    error: err 
+  });
+  return res.json({ 
+    success: true, 
+    amount: peopleJSON.length,
+    users: peopleJSON 
+  });
 });
 
 
+// this method will send a authentication token back to the client if
+// the user and password are correct.
+router.get('/authenticate', (req, res) => {
+  User.findOne({ 
+    username: req.query.username,
+    password: req.query.password
+   }, (err, user) => {
+    if (user === null || err !== null) return res.json({ success: false });
+    console.log(user);
+    var token = jwt.sign(
+      { username: user.username }, 
+      'thisIsAInventoryManagementSystem123', 
+      { expiresIn: 120 }
+    );
+    return res.json({ token: token });
+   });
+});
 
 
 
